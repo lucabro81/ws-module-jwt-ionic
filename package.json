@@ -2,9 +2,13 @@
   "name": "ws-module-jwt-ionic",
   "version": "0.0.1",
   "description": "",
-  "main": "index.js",
+  "main": "./dist/index.js",
+  "typings": "./dist/index.d.ts",
+  "files": ["dist"],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "ngc": "ngc",
+    "build": "rm -rf dist && npm run ngc",
+    "publishPackage": "npm run build && npm publish"
   },
   "repository": {
     "type": "git",
