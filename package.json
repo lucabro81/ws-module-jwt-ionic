@@ -1,0 +1,35 @@
+{
+  "name": "ws-module-jwt-ionic",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lucabro81/ws-module-jwt-ionic.git"
+  },
+  "author": "Luca Brognara",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/lucabro81/ws-module-jwt-ionic/issues"
+  },
+  "homepage": "https://github.com/lucabro81/ws-module-jwt-ionic#readme",
+  "devDependencies": {
+    "@angular/common": "5.2.10",
+    "@angular/compiler": "5.2.10",
+    "@angular/compiler-cli": "5.2.10",
+    "@angular/core": "5.2.10",
+    "@angular/forms": "5.2.10",
+    "@angular/http": "5.2.10",
+    "@angular/platform-browser": "5.2.10",
+    "@angular/platform-browser-dynamic": "5.2.10",
+    "@types/node": "9.4.6",
+    "@ionic/storage": "2.1.3",
+    "ionic-angular": "3.9.2",
+    "rxjs": "5.5.11",
+    "typescript": "2.6.2",
+    "zone.js": "0.8.26"
+  }
+}
