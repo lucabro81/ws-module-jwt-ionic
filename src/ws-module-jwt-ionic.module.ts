@@ -1,6 +1,7 @@
 import {NgModule, ModuleWithProviders} from '@angular/core';
 import {IonicJWSService} from "./services/ionic-jwt.service";
 import {IonicJWTComponent} from "./components/ionic-jwt.component";
+import {SecureStorage} from "@ionic-native/secure-storage";
 import {IonicModule} from 'ionic-angular';
 
 @NgModule({
@@ -17,11 +18,15 @@ import {IonicModule} from 'ionic-angular';
         IonicJWTComponent
     ]
 })
+
 export class IonioJWTModule {
     static forRoot(): ModuleWithProviders {
         return {
             ngModule: IonioJWTModule,
-            providers: [IonicJWSService]
+            providers: [
+                SecureStorage,
+                IonicJWSService
+            ]
         };
     }
 }
