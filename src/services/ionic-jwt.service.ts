@@ -1,11 +1,9 @@
 import {EventEmitter, Injectable} from '@angular/core';
 import {Storage} from '@ionic/storage';
-import {SecureStorage, SecureStorageObject} from "@ionic-native/secure-storage";
 import {JWTdataVO} from "../vo/JWTdataVO";
 import {Const} from "../utils/Const";
 import {TokenVO} from "../vo/TokenVO";
 import {JWTEvents} from "../vo/JWTEvents";
-import {Platform} from "ionic-angular";
 
 @Injectable()
 export class IonicJWSService {
@@ -14,15 +12,13 @@ export class IonicJWSService {
         onEndRequest: new EventEmitter(),
         onCreateNameSpacedStorageSuccess: new EventEmitter(),
         onCreateNameSpacedStorageError: new EventEmitter(),
-        onReadSecureStorageSuccess: new EventEmitter(),
-        onReadSecureStorageError: new EventEmitter(),
-        onTokensDataSet: new EventEmitter(),
+        onReadStorageSuccess: new EventEmitter(),
+        onReadStorageError: new EventEmitter(),
         onStorageComplete: new EventEmitter(),
         onStorageError: new EventEmitter()
     };
 
     private _tokens: JWTdataVO;
-    private _tokens_container: SecureStorageObject;
     private _expiring_time: number = 720; // 12 minutes
 
   /////////////////////////////////
@@ -31,45 +27,32 @@ export class IonicJWSService {
 
     /**
      *
-     * @param plt
-     * @param storage       fallback nel caso di android e cordova o secure non disponibili
-     * @param secureStorage
+     * @param storage
      */
-    public constructor(public plt: Platform,
-                       private storage: Storage,
-                       private secureStorage: SecureStorage) {
-
-        if (this.plt.is(Const.KEYS.CORDOVA_PLT)) {
-            this.secureStorage
-                .create(Const.KEYS.TOKENS)
-                .then(
-                    (secure_obj: SecureStorageObject) => {
-                        this._tokens_container = secure_obj;
-                        this.events.onEndRequest.subscribe(this._saveTokens);
-                        this.events.onCreateNameSpacedStorageSuccess;
-
-                        this._tokens_container
-                            .get(Const.KEYS.JWT_TOKENS)
-                            .then(
-                                this._readSecureStorageSuccess,
-                                this._readSecureStorageError
-                            );
-                    },
-                    () => {
-                        this.events.onEndRequest.subscribe(this._saveTokens);
-                        this.events.onCreateNameSpacedStorageError.emit();
-                        this._readSecureStorageError();
-                    }
-                );
-        }
-        else {
-
-        }
+    public constructor(private storage: Storage) {
     }
 
   ////////////////////////////
  ////////// PUBLIC //////////
 ////////////////////////////
+
+    /**
+     *
+     * @returns {Promise<JWTdataVO>}
+     */
+    public init(): Promise<JWTdataVO> {
+        return this.storage
+            .get(Const.KEYS.JWT_TOKENS)
+            .then(
+                (data:JWTdataVO) => {
+                    this.events.onEndRequest.subscribe(this._saveTokens);
+                    this._readStorageSuccess(data);
+                },
+                (err) => {
+                    this._readStorageError(err);
+                }
+            );
+    }
 
     /**
      *
@@ -92,7 +75,7 @@ export class IonicJWSService {
      *
      * @returns {number}
      */
-    public getSecondsRemaining(): number {
+    public getSecondsLeft(): number {
         let now: number = Date.now();
         return this._tokens.access.expires - (now / 1000);
     }
@@ -102,7 +85,7 @@ export class IonicJWSService {
      *
      * @returns {number}
      */
-    public getMinutesRemaining(): number {
+    public getMinutesLeft(): number {
         let now: number = Date.now();
         return (this._tokens.access.expires - (now / 1000)) / 60;
     }
@@ -130,83 +113,16 @@ export class IonicJWSService {
 
         let now: number = Date.now();
 
-        // TODO: valutare se eliminare il controllo
-        if (!this._tokens_container) { // se non c'è ritento la creazione, valutare se eliminare il controllo
-            if (this.plt.is(Const.KEYS.CORDOVA_PLT)) {
-                this.secureStorage
-                    .create(Const.KEYS.TOKENS)
-                    .then(
-                        (storage) => {
-                            this._tokens_container = storage;
-                            this._onStoreTokensCreationSuccess()
-                        },
-                        (err) => this._onStoreTokensCreationError(err)
-                    )
-            }
-            else {
-                this._onStoreTokensCreationError();
-            }
-        }
-        else { // altrimenti uso l'istanza che ho e bon
-            this._onStoreTokensCreationSuccess();
-        }
-    }
-
-    /**
-     *
-     * @param data
-     * @private
-     */
-    private _readSecureStorageSuccess(data) {
-        this._tokens = <JWTdataVO>JSON.parse(data);
-        this.events.onReadSecureStorageSuccess.emit();
-        this.events.onTokensDataSet.emit(this._tokens);
-    }
-
-    /**
-     *
-     * @private
-     */
-    private _readSecureStorageError() {
-        this.storage
-            .get(<string>Const.KEYS.JWT_TOKENS)
-            .then(
-                (token_obj) => {
-                    this._tokens = token_obj;
-                    this.events.onTokensDataSet.emit(this._tokens);
-                }
-            );
-        this.events.onReadSecureStorageError.emit();
-    }
-
-    /**
-     *
-     * @param storage
-     * @private
-     */
-    private _onStoreTokensCreationSuccess() {
-        this._tokens_container
-            .set(Const.KEYS.JWT_TOKENS, JSON.stringify(this._tokens))
-            .then((data) => this._onStorageComplete(data))
-            .catch((err) => this._onStorageError(err));
-    }
-
-    /**
-     *
-     * @param err
-     * @private
-     */
-    private _onStoreTokensCreationError(err?:any) {
         this.storage
             .set(Const.KEYS.JWT_TOKENS, this._tokens)
             .then(
                 () => {
-                    this.events.onStorageComplete.emit(this._tokens);
+                    this._onStorageComplete(this._tokens);
                 },
                 (err) => {
-                    this.events.onStorageError.emit(err);
+                    this._onStorageError(err);
                 }
-            );
+            )
     }
 
     /**
@@ -214,8 +130,26 @@ export class IonicJWSService {
      * @param data
      * @private
      */
-    private _onStorageComplete(data) {
-        this.events.onStorageComplete.emit(data);
+    private _readStorageSuccess(data):void {
+        this._tokens = <JWTdataVO>JSON.parse(data);
+        this.events.onReadStorageSuccess.emit(this._tokens);
+    }
+
+    /**
+     *
+     * @private
+     */
+    private _readStorageError(err):void {
+        this.events.onReadSecureStorageError.emit(err);
+    }
+
+    /**
+     *
+     * @param data
+     * @private
+     */
+    private _onStorageComplete(tokens):void {
+        this.events.onStorageComplete.emit(tokens);
     }
 
     /**
@@ -224,16 +158,7 @@ export class IonicJWSService {
      * @private
      */
     private _onStorageError(error:any):void {
-        this.storage
-            .set(Const.KEYS.JWT_TOKENS, this._tokens)
-            .then(
-                () => {
-                    this.events.onStorageComplete.emit(this._tokens);
-                },
-                (err) => {
-                    this.events.onStorageError.emit(err);
-                }
-            );
+        this.events.onStorageError.emit(error);
     }
 
 }
