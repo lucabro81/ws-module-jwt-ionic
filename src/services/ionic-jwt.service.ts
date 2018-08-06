@@ -9,11 +9,11 @@ import { JWTEvents } from "../vo/JWTEvents";
 export class IonicJWSService {
 
     public events: JWTEvents = <JWTEvents>{
-        onEndRequest: new EventEmitter(),
-        onReadStorageSuccess: new EventEmitter(),
-        onReadStorageEvent: new EventEmitter(),
-        onStorageComplete: new EventEmitter(),
-        onStorageError: new EventEmitter()
+        onEndRequest: new EventEmitter<JWTdataVO>(),
+        onReadStorageSuccess: new EventEmitter<JWTdataVO>(),
+        onReadStorageError: new EventEmitter<any>(),
+        onStorageComplete: new EventEmitter<JWTdataVO>(),
+        onStorageError: new EventEmitter<any>()
     };
 
     private _tokens: JWTdataVO;
@@ -38,7 +38,7 @@ export class IonicJWSService {
      *
      * @returns {Promise<JWTdataVO>}
      */
-    public init(): Promise<JWTdataVO> {
+    public init(): Promise<void> {
         return this.storage
                    .get(Const.KEYS.JWT_TOKENS)
                    .then(

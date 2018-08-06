@@ -1,9 +1,10 @@
 import {EventEmitter} from "@angular/core";
+import { JWTdataVO } from "./JWTdataVO";
 
 export interface JWTEvents {
-    onEndRequest: EventEmitter,
-    onReadStorageSuccess: EventEmitter,
-    onReadStorageError: EventEmitter,
-    onStorageComplete: EventEmitter,
-    onStorageError: EventEmitter
+    onEndRequest: EventEmitter<JWTdataVO>;
+    onReadStorageSuccess: EventEmitter<JWTdataVO>;
+    onReadStorageError: EventEmitter<any>;
+    onStorageComplete: EventEmitter<JWTdataVO>;
+    onStorageError: EventEmitter<any>;
 }
