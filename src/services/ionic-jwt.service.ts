@@ -1,19 +1,17 @@
-import {EventEmitter, Injectable} from '@angular/core';
-import {Storage} from '@ionic/storage';
-import {JWTdataVO} from "../vo/JWTdataVO";
-import {Const} from "../utils/Const";
-import {TokenVO} from "../vo/TokenVO";
-import {JWTEvents} from "../vo/JWTEvents";
+import { EventEmitter, Injectable } from '@angular/core';
+import { Storage } from '@ionic/storage';
+import { JWTdataVO } from "../vo/JWTdataVO";
+import { Const } from "../utils/Const";
+import { TokenVO } from "../vo/TokenVO";
+import { JWTEvents } from "../vo/JWTEvents";
 
 @Injectable()
 export class IonicJWSService {
 
     public events: JWTEvents = <JWTEvents>{
         onEndRequest: new EventEmitter(),
-        onCreateNameSpacedStorageSuccess: new EventEmitter(),
-        onCreateNameSpacedStorageError: new EventEmitter(),
         onReadStorageSuccess: new EventEmitter(),
-        onReadStorageError: new EventEmitter(),
+        onReadStorageEvent: new EventEmitter(),
         onStorageComplete: new EventEmitter(),
         onStorageError: new EventEmitter()
     };
@@ -42,16 +40,16 @@ export class IonicJWSService {
      */
     public init(): Promise<JWTdataVO> {
         return this.storage
-            .get(Const.KEYS.JWT_TOKENS)
-            .then(
-                (data:JWTdataVO) => {
-                    this.events.onEndRequest.subscribe(this._saveTokens);
-                    this._readStorageSuccess(data);
-                },
-                (err) => {
-                    this._readStorageError(err);
-                }
-            );
+                   .get(Const.KEYS.JWT_TOKENS)
+                   .then(
+                       (data: JWTdataVO) => {
+                           this.events.onEndRequest.subscribe(this._saveTokens);
+                           this._readStorageSuccess(data);
+                       },
+                       (err) => {
+                           this._readStorageError(err);
+                       }
+                   );
     }
 
     /**
@@ -130,7 +128,7 @@ export class IonicJWSService {
      * @param data
      * @private
      */
-    private _readStorageSuccess(data):void {
+    private _readStorageSuccess(data): void {
         this._tokens = <JWTdataVO>JSON.parse(data);
         this.events.onReadStorageSuccess.emit(this._tokens);
     }
@@ -139,16 +137,16 @@ export class IonicJWSService {
      *
      * @private
      */
-    private _readStorageError(err):void {
-        this.events.onReadSecureStorageError.emit(err);
+    private _readStorageError(err): void {
+        this.events.onReadStorageError.emit(err);
     }
 
     /**
      *
-     * @param data
+     * @param tokens
      * @private
      */
-    private _onStorageComplete(tokens):void {
+    private _onStorageComplete(tokens): void {
         this.events.onStorageComplete.emit(tokens);
     }
 
@@ -157,7 +155,7 @@ export class IonicJWSService {
      * @param error
      * @private
      */
-    private _onStorageError(error:any):void {
+    private _onStorageError(error: any): void {
         this.events.onStorageError.emit(error);
     }
 
